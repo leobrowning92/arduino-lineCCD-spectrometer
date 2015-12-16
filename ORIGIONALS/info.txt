@@ -1,0 +1,3 @@
+This contains the origional work that we have done as of 2015-12-16
+as well as the origional arduino code from David Allman and his circuit
+diagram from http://davidallmon.com/pages/ccd-transmission-spectrograph
