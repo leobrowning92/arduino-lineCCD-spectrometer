@@ -55,3 +55,6 @@ docs/_build/
 
 # PyBuilder
 target/
+
+# extra files from gEDA
+*.sch~
