@@ -1,38 +1,55 @@
-import sys, time, os
 import serial
-import numpy as np
+import time
 import matplotlib.pyplot as plt
+
 plt.interactive(True)
+print 'import'
 
-try:
-    s = serial.Serial( baudrate=115200, port='/dev/ttyUSB1' , timeout=.5 )#, parity=serial.PARITY_EVEN )
-except:
-    print("issue connecting") 
-#os.system('stty -F /dev/ttyUSB0 115200 cs8 cread clocal')
 
-dat = np.zeros((800))
-x=range(800)
-p = plt.plot( x, dat )
-#print type(p)
-plt.ylim(0,200)
+# open up dummy serial to reset the arduino with
+s = serial.Serial(port='/dev/ttyUSB1')
+
+# reset the arduino
+s.flushInput()
+s.setDTR(level=False)
 time.sleep(0.5)
+# ensure there is no stale data in the buffer
+s.flushInput()
+s.setDTR()
+time.sleep(1)
 
+# now open up a new serial line for communication
+s = serial.Serial(baudrate=115200, port='/dev/ttyUSB1', timeout=0.01)
+
+#initializes plotting axis
+fig = plt.figure()
+ax1 = fig.add_subplot(1,1,1)
+
+# initializes data
+data=[]
+# time for system to settle after opening serial port
+time.sleep(1)
+# initial read command
+s.write('r')
+#continuous loop that will plot the data anew each time it runs, as well as
+#pass the read command to the arduino
 while True:
-    #print "step"
-    s.write('r')
-    time.sleep(0.002) #INTEGRATION TIME
-    for i in range(800):
-        print(i)
-        #print s.read()
-        d = s.readline()
-        print(d)
-        if d=='':
-        	print('nothing to read')
-        	dat[i] = np.float(d.rstrip())
-    		p, = plt.plot( range(800), dat )
-    		plt.set_ydata(dat)
-    		plt.draw()
-    
-    
+    s.write('r') #read command
 
+    #loop which iterates through the serial being read, only taking
+    #non-empty values and appending them to the data set
+    while True:
+        value=s.readline()
+        if value !='':
+            data.append(float(value.rstrip()))
 
+            #determines the length of the dataset to observe
+            if len(data)==800:
+                break
+
+    #plots the dataset
+    ax1.clear()
+    ax1.plot( range(len(data)), data )
+    plt.draw()
+
+    data=[]
